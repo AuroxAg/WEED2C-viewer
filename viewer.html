@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dataset Viewer — Aurox</title>
+<meta name="description" content="Intelligent viewer for plant-detection datasets. Filter by class, collection and density — and inspect every annotation." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<!-- ============================ HEADER ============================ -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="index.html" aria-label="Aurox — all datasets">
+      <svg class="brand__mark" viewBox="0 0 90 160" aria-hidden="true">
+        <path d="M58.77 33.21L85.68 70.99L59.38 112" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+        <path d="M31.38 33.21L58.30 70.99L32.00 112" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+        <path d="M4.00 33.21L30.91 70.99L4.62 112"  fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      </svg>
+      <span class="brand__word">Aurox</span>
+      <span class="brand__sep" aria-hidden="true"></span>
+      <span class="brand__cat">Autonomous Field Systems</span>
+    </a>
+    <div class="topbar__right">
+      <a class="back-link" href="index.html">← Datasets</a>
+      <label class="ds-switch">
+        <span class="ds-switch__label">Dataset</span>
+        <select id="dsSwitch" class="select-input select-input--sm" aria-label="Switch dataset"></select>
+      </label>
+      <button id="themeBtn" class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span data-theme-label>Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="hero__inner">
+    <p class="hero__eyebrow" id="heroEyebrow"></p>
+    <h1 class="hero__title" id="heroTitle"></h1>
+    <p class="hero__lede" id="heroLede"></p>
+    <dl class="telemetry" id="telemetry"></dl>
+  </div>
+</section>
+
+<!-- ============================ APP ============================ -->
+<main class="layout">
+  <!-- Sidebar filters -->
+  <aside class="filters" id="filters">
+    <div class="filters__head">
+      <h2>Filters</h2>
+      <button id="resetBtn" class="link-btn" type="button">Clear</button>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label" for="search">Search</label>
+      <input id="search" class="search-input" type="search" placeholder="filename…" autocomplete="off" />
+    </div>
+
+    <fieldset class="filter-group" id="classFilters">
+      <legend class="filter-label" id="classLegend">Class</legend>
+      <div class="chips" data-role="classes"></div>
+      <div class="segmented" data-role="matchmode" role="group" aria-label="Match mode">
+        <button type="button" data-mode="any" class="is-active">Any</button>
+        <button type="button" data-mode="all">All</button>
+        <button type="button" data-mode="only">Only</button>
+      </div>
+    </fieldset>
+
+    <!-- Per-dataset facet filters (collection, stage, …) injected here -->
+    <div id="facetFilters"></div>
+
+    <fieldset class="filter-group" id="densityFilters">
+      <legend class="filter-label">Density</legend>
+      <div class="chips" data-role="density"></div>
+    </fieldset>
+
+    <div class="filter-group">
+      <label class="filter-label" for="sort">Sort by</label>
+      <select id="sort" class="select-input">
+        <option value="name">Name</option>
+        <option value="most">Most annotations</option>
+        <option value="least">Fewest annotations</option>
+        <option value="canopy" data-metric="canopy">Canopy coverage</option>
+      </select>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="boxesToggle" />
+      <span class="switch__track" aria-hidden="true"></span>
+      <span>Overlay boxes on grid</span>
+    </label>
+  </aside>
+
+  <!-- Gallery -->
+  <section class="gallery-wrap">
+    <div class="gallery-bar">
+      <p class="result-count" id="resultCount">—</p>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <p class="empty" id="empty" hidden>No images match the filters.</p>
+  </section>
+</main>
+
+<!-- ============================ LIGHTBOX ============================ -->
+<div class="lightbox" id="lightbox" hidden>
+  <div class="lightbox__backdrop" data-close></div>
+  <div class="lightbox__panel" role="dialog" aria-modal="true" aria-label="Image detail">
+    <button class="lightbox__close" data-close aria-label="Close">✕</button>
+    <button class="lightbox__nav lightbox__nav--prev" data-nav="-1" aria-label="Previous">‹</button>
+    <button class="lightbox__nav lightbox__nav--next" data-nav="1" aria-label="Next">›</button>
+
+    <div class="stage" id="stage">
+      <div class="stage__frame" id="stageFrame">
+        <img id="stageImg" alt="" />
+        <div class="stage__boxes" id="stageBoxes"></div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <p class="meta__file" id="metaFile"></p>
+      <dl class="meta__grid" id="metaGrid"></dl>
+      <div class="meta__counts" id="metaCounts"></div>
+      <div class="meta__controls">
+        <label class="switch switch--sm">
+          <input type="checkbox" id="lbBoxes" checked />
+          <span class="switch__track" aria-hidden="true"></span>
+          <span>Boxes</span>
+        </label>
+        <label class="switch switch--sm">
+          <input type="checkbox" id="lbLabels" checked />
+          <span class="switch__track" aria-hidden="true"></span>
+          <span>Labels</span>
+        </label>
+        <a class="meta__open" id="metaOpen" href="#" target="_blank" rel="noopener">Open original ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Credits — populated per dataset from the registry -->
+<section class="credits" id="credits"></section>
+
+<footer class="foot">
+  <span id="footSource"></span>
+  <span class="foot__brand">Aurox — The farm, autonomous.</span>
+</footer>
+
+<script src="theme.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

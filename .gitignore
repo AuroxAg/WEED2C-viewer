@@ -5,8 +5,9 @@
 # Build output (assembled by build.sh for deploy)
 /public/
 
-# Source dataset archive (389 MB)
+# Source dataset archives (heavy — mirror to a Release for deploy)
 WEED2C-Dataset.zip
+SoyCotton.zip
 
 # Conductor workspace scratch
 .context/
