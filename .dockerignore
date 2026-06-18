@@ -1,0 +1,9 @@
+# Keep the build context tiny — the dataset is downloaded inside the image.
+images/
+thumbs/
+public/
+WEED2C-Dataset.zip
+.context/
+.git/
+.DS_Store
+*.md

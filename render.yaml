@@ -1,0 +1,26 @@
+# Render Blueprint — WEED2C Viewer (static site).
+# Deploy: push to GitHub, then New + → Blueprint, point at this repo.
+# The build downloads the dataset and generates images/thumbs/manifest.
+services:
+  - type: web
+    name: weed2c-viewer
+    runtime: static
+    buildCommand: bash build.sh
+    staticPublishPath: ./public
+    envVars:
+      # Public GitHub Release mirror of the dataset (this repo is public).
+      - key: DATASET_URL
+        value: https://github.com/AuroxAg/WEED2C-viewer/releases/download/dataset-v1/WEED2C-Dataset.zip
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: "public, max-age=604800, immutable"
+      - path: /thumbs/*
+        name: Cache-Control
+        value: "public, max-age=604800"
+      - path: /images/*
+        name: Cache-Control
+        value: "public, max-age=604800"
+      - path: /data/*
+        name: Cache-Control
+        value: "public, max-age=3600"
