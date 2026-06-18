@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WEED2C · Dataset Viewer — Aurox</title>
+<meta name="description" content="Intelligent viewer for the WEED2C dataset: hairy fleabane and sourgrass at the plant level. Filter by class, collection and weed density." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<!-- ============================ HEADER ============================ -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="#" aria-label="Aurox">
+      <svg class="brand__mark" viewBox="0 0 90 160" aria-hidden="true">
+        <path d="M58.77 33.21L85.68 70.99L59.38 112" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+        <path d="M31.38 33.21L58.30 70.99L32.00 112" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+        <path d="M4.00 33.21L30.91 70.99L4.62 112"  fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      </svg>
+      <span class="brand__word">Aurox</span>
+      <span class="brand__sep" aria-hidden="true"></span>
+      <span class="brand__cat">Autonomous Field Systems</span>
+    </a>
+    <div class="topbar__right">
+      <span class="tool-tag">WEED2C · Dataset Viewer</span>
+      <button id="themeBtn" class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span data-theme-label>Light</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="hero__inner">
+    <p class="hero__eyebrow">ByeBuva · Field Vision</p>
+    <h1 class="hero__title">Weeds, at the <em>plant</em> level.</h1>
+    <p class="hero__lede">
+      763 aerial soybean images with hairy fleabane and sourgrass annotated box by box.
+      Filter by class, collection and density — and inspect every detection.
+    </p>
+    <dl class="telemetry" id="telemetry"></dl>
+  </div>
+</section>
+
+<!-- ============================ APP ============================ -->
+<main class="layout">
+  <!-- Sidebar filters -->
+  <aside class="filters" id="filters">
+    <div class="filters__head">
+      <h2>Filters</h2>
+      <button id="resetBtn" class="link-btn" type="button">Clear</button>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label" for="search">Search</label>
+      <input id="search" class="search-input" type="search" placeholder="filename…" autocomplete="off" />
+    </div>
+
+    <fieldset class="filter-group" id="classFilters">
+      <legend class="filter-label">Weed class</legend>
+      <div class="chips" data-role="classes"></div>
+      <div class="segmented" data-role="matchmode" role="group" aria-label="Match mode">
+        <button type="button" data-mode="any" class="is-active">Any</button>
+        <button type="button" data-mode="all">All</button>
+        <button type="button" data-mode="only">Only</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="filter-group" id="stageFilters">
+      <legend class="filter-label">Vegetative stage <span class="est-tag" title="Estimated from collection date and canopy coverage (Excess Green) — the dataset does not label stage per image.">estimated</span></legend>
+      <div class="chips" data-role="stages"></div>
+    </fieldset>
+
+    <fieldset class="filter-group" id="groupFilters">
+      <legend class="filter-label">Collection</legend>
+      <div class="chips" data-role="groups"></div>
+    </fieldset>
+
+    <fieldset class="filter-group" id="densityFilters">
+      <legend class="filter-label">Weed density</legend>
+      <div class="chips" data-role="density"></div>
+    </fieldset>
+
+    <div class="filter-group">
+      <label class="filter-label" for="sort">Sort by</label>
+      <select id="sort" class="select-input">
+        <option value="name">Name (collection)</option>
+        <option value="most">Most weeds</option>
+        <option value="least">Fewest weeds</option>
+        <option value="canopy">Canopy coverage</option>
+      </select>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="boxesToggle" />
+      <span class="switch__track" aria-hidden="true"></span>
+      <span>Overlay boxes on grid</span>
+    </label>
+  </aside>
+
+  <!-- Gallery -->
+  <section class="gallery-wrap">
+    <div class="gallery-bar">
+      <p class="result-count" id="resultCount">—</p>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <p class="empty" id="empty" hidden>No images match the filters.</p>
+  </section>
+</main>
+
+<!-- ============================ LIGHTBOX ============================ -->
+<div class="lightbox" id="lightbox" hidden>
+  <div class="lightbox__backdrop" data-close></div>
+  <div class="lightbox__panel" role="dialog" aria-modal="true" aria-label="Image detail">
+    <button class="lightbox__close" data-close aria-label="Close">✕</button>
+    <button class="lightbox__nav lightbox__nav--prev" data-nav="-1" aria-label="Previous">‹</button>
+    <button class="lightbox__nav lightbox__nav--next" data-nav="1" aria-label="Next">›</button>
+
+    <div class="stage" id="stage">
+      <div class="stage__frame" id="stageFrame">
+        <img id="stageImg" alt="" />
+        <div class="stage__boxes" id="stageBoxes"></div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <p class="meta__file" id="metaFile"></p>
+      <dl class="meta__grid" id="metaGrid"></dl>
+      <div class="meta__counts" id="metaCounts"></div>
+      <div class="meta__controls">
+        <label class="switch switch--sm">
+          <input type="checkbox" id="lbBoxes" checked />
+          <span class="switch__track" aria-hidden="true"></span>
+          <span>Boxes</span>
+        </label>
+        <label class="switch switch--sm">
+          <input type="checkbox" id="lbLabels" checked />
+          <span class="switch__track" aria-hidden="true"></span>
+          <span>Labels</span>
+        </label>
+        <a class="meta__open" id="metaOpen" href="#" target="_blank" rel="noopener">Open original ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="credits" id="credits">
+  <div class="credits__inner">
+    <div class="credits__col">
+      <h2 class="credits__title">Credits &amp; Citation</h2>
+      <p class="credits__lead">
+        The images and annotations belong to the <strong>WEED2C-Dataset</strong>, created
+        by the authors below. When using this material, please cite the original work:
+      </p>
+      <blockquote class="citation">
+        TETILA, E. C.; MORO, B. L.; ASTOLFI, G.; DA COSTA, A. B.; AMORIM, W. P.;
+        BELETE, N. A. de S.; PISTORI, H.; BARBEDO, J. G. A.
+        <em>Real-time detection of weeds by species in soybean using UAV images.</em>
+        Crop Protection, v. 184, p. 106846, 2024.
+      </blockquote>
+      <p class="credits__links">
+        <a href="https://doi.org/10.1016/j.cropro.2024.106846" target="_blank" rel="noopener">DOI: 10.1016/j.cropro.2024.106846 ↗</a>
+        <a href="https://github.com/EvertonTetila/WEED2C-Dataset" target="_blank" rel="noopener">Dataset repository ↗</a>
+      </p>
+    </div>
+    <div class="credits__col credits__col--meta">
+      <dl class="credits__facts">
+        <dt>Acquisition</dt><dd>UAV Phantom 4 Advanced · Sony 20 MP camera · 10 m altitude</dd>
+        <dt>Location</dt><dd>Caarapó-MS and Dourados-MS, Brazil · 2020/21 season</dd>
+        <dt>Stages</dt><dd>Soybean V3, V4 and V5 — <em>estimated</em> from collection date + canopy coverage (Excess Green); the dataset does not label stage per image</dd>
+        <dt>Annotation</dt><dd>LabelImg · Pascal VOC, with agronomist support</dd>
+      </dl>
+      <p class="credits__note">
+        Study project by <strong>Aurox</strong>, built on the Aurox visual system. Non-commercial.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <span>Dataset: <a href="https://github.com/EvertonTetila/WEED2C-Dataset" target="_blank" rel="noopener">WEED2C-Dataset</a> · Tetila et al., 2024 · Crop Protection</span>
+  <span class="foot__brand">Aurox — The farm, autonomous.</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
