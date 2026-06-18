@@ -1,0 +1,82 @@
+{
+  "site": {
+    "eyebrow": "Aurox · Field Vision",
+    "titleHtml": "Agronomy datasets, made <em>legible</em>.",
+    "lede": "Intelligent viewers for open plant-detection datasets. Pick a dataset to explore every image, class and annotation — filterable, inspectable, box by box.",
+    "note": "More datasets are added over time. Each viewer renders from a compact, self-describing manifest built by prepare.py."
+  },
+  "datasets": [
+    {
+      "id": "weed2c",
+      "name": "WEED2C",
+      "fullName": "WEED2C-Dataset",
+      "accent": "#8C9A4A",
+      "cover": "thumbs/weed2c/18-12-2020 (304).jpg",
+      "task": "Object detection",
+      "tags": ["UAV imagery", "Soybean", "Bounding boxes", "2 weed species"],
+      "stats": { "images": 763, "annotations": 3952, "classes": 2 },
+      "card": {
+        "tagline": "Weeds, at the plant level.",
+        "blurb": "Aerial soybean fields with hairy fleabane and sourgrass annotated box by box, across estimated V3–V5 vegetative stages."
+      },
+      "hero": {
+        "eyebrow": "ByeBuva · Field Vision",
+        "titleHtml": "Weeds, at the <em>plant</em> level.",
+        "lede": "763 aerial soybean images with hairy fleabane and sourgrass annotated box by box. Filter by class, collection and density — and inspect every detection."
+      },
+      "credits": {
+        "lead": "The images and annotations belong to the <strong>WEED2C-Dataset</strong>, created by the authors below. When using this material, please cite the original work:",
+        "citationHtml": "TETILA, E. C.; MORO, B. L.; ASTOLFI, G.; DA COSTA, A. B.; AMORIM, W. P.; BELETE, N. A. de S.; PISTORI, H.; BARBEDO, J. G. A. <em>Real-time detection of weeds by species in soybean using UAV images.</em> Crop Protection, v. 184, p. 106846, 2024.",
+        "links": [
+          { "label": "DOI: 10.1016/j.cropro.2024.106846 ↗", "href": "https://doi.org/10.1016/j.cropro.2024.106846" },
+          { "label": "Dataset repository ↗", "href": "https://github.com/EvertonTetila/WEED2C-Dataset" }
+        ],
+        "facts": [
+          ["Acquisition", "UAV Phantom 4 Advanced · Sony 20 MP camera · 10 m altitude"],
+          ["Location", "Caarapó-MS and Dourados-MS, Brazil · 2020/21 season"],
+          ["Stages", "Soybean V3, V4 and V5 — <em>estimated</em> from collection date + canopy coverage (Excess Green); the dataset does not label stage per image"],
+          ["Annotation", "LabelImg · Pascal VOC, with agronomist support"]
+        ],
+        "note": "Study project by <strong>Aurox</strong>, built on the Aurox visual system. Non-commercial.",
+        "footer": { "text": "Dataset: WEED2C-Dataset · Tetila et al., 2024 · Crop Protection", "href": "https://github.com/EvertonTetila/WEED2C-Dataset" }
+      }
+    },
+    {
+      "id": "soycotton",
+      "name": "SoyCotton-Leafs",
+      "fullName": "SoyCotton-Leafs",
+      "accent": "#7FA03C",
+      "cover": "thumbs/soycotton/00d6e742-756c-4f99-96b6-4f47730ef944.jpg",
+      "task": "Instance segmentation",
+      "tags": ["Field RGB", "Soybean · Cotton", "Instance masks", "12,411 leaves"],
+      "stats": { "images": 640, "annotations": 12411, "classes": 2 },
+      "card": {
+        "tagline": "Crops, at the leaf level.",
+        "blurb": "Soybean and cotton seedlings on red soil — every leaf annotated as a COCO instance, with bounding boxes and segmentation masks."
+      },
+      "hero": {
+        "eyebrow": "Field Vision · Leaf-level",
+        "titleHtml": "Crops, at the <em>leaf</em> level.",
+        "lede": "640 field images of soybean and cotton with every leaf annotated as an instance — 12,411 masks across two classes. Filter by class and density, then inspect every detection."
+      },
+      "credits": {
+        "lead": "The images and annotations belong to the <strong>SoyCotton-Leafs</strong> dataset, created by the authors below. When using this material, please cite the original work:",
+        "citationHtml": "SEGRETO, T. H.; NEGRI, J.; POLEGATO, P. H.; PINHEIRO, J. M. H.; GODOY, R. V.; BECKER, M. <em>A Leaf-Level Dataset for Soybean-Cotton Detection and Segmentation.</em> Scientific Data, 2026.",
+        "links": [
+          { "label": "DOI: 10.1038/s41597-026-07092-8 ↗", "href": "https://doi.org/10.1038/s41597-026-07092-8" },
+          { "label": "Dataset (figshare, CC BY 4.0) ↗", "href": "https://doi.org/10.6084/m9.figshare.28466636.v3" },
+          { "label": "Code repository ↗", "href": "https://github.com/segretto/soycotton-data" }
+        ],
+        "facts": [
+          ["Acquisition", "Field RGB photography · commercial farm"],
+          ["Location", "São Paulo, Brazil"],
+          ["Conditions", "Multiple growth stages, weed pressures and lighting variations"],
+          ["Annotation", "COCO · leaf-instance bounding boxes + segmentation masks (YOLO11-validated)"],
+          ["License", "CC BY 4.0"]
+        ],
+        "note": "Study project by <strong>Aurox</strong>, built on the Aurox visual system. Non-commercial.",
+        "footer": { "text": "Dataset: SoyCotton-Leafs · Segreto et al., 2026 · Scientific Data", "href": "https://doi.org/10.1038/s41597-026-07092-8" }
+      }
+    }
+  ]
+}

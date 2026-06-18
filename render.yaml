@@ -1,16 +1,23 @@
-# Render Blueprint — WEED2C Viewer (static site).
+# Render Blueprint — Aurox Dataset Viewers (static site).
 # Deploy: push to GitHub, then New + → Blueprint, point at this repo.
-# The build downloads the dataset and generates images/thumbs/manifest.
+# The build downloads each dataset and generates images/thumbs/manifests.
 services:
   - type: web
-    name: weed2c-viewer
+    name: aurox-dataset-viewers
     runtime: static
     buildCommand: bash build.sh
     staticPublishPath: ./public
     envVars:
-      # Public GitHub Release mirror of the dataset (this repo is public).
-      - key: DATASET_URL
+      # Which datasets to build (space-separated ids; see prepare.py).
+      - key: DATASETS
+        value: weed2c soycotton
+      # Public GitHub Release mirror of the WEED2C dataset (this repo is public).
+      - key: WEED2C_URL
         value: https://github.com/AuroxAg/WEED2C-viewer/releases/download/dataset-v1/WEED2C-Dataset.zip
+      # SoyCotton-Leafs (CC BY 4.0). Public GitHub Release mirror of this repo.
+      # Canonical source: https://doi.org/10.6084/m9.figshare.28466636.v3
+      - key: SOYCOTTON_URL
+        value: https://github.com/AuroxAg/WEED2C-viewer/releases/download/soycotton-v1/SoyCotton.zip
     headers:
       - path: /assets/*
         name: Cache-Control

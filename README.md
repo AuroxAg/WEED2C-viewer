@@ -1,113 +1,121 @@
-# WEED2C · Intelligent Dataset Viewer
+# Aurox · Dataset Viewers
 
-A static viewer for the **WEED2C-Dataset** — 763 aerial (UAV) images of soybean
-fields with weeds annotated box-by-box across two classes: **buva**
-(*Conyza spp.*) and **capim-amargoso / sourgrass** (*Digitaria insularis*).
+Static, intelligent viewers for open **plant-detection datasets**, built on the
+**Aurox** visual system (DM Serif Display + IBM Plex Mono; Field Olive / Bone
+White / Dry Soil palette; light and dark themes). A landing page lets you choose
+a dataset; each one opens in the same config-driven viewer.
 
-Built on the **Aurox** visual system (DM Serif Display + IBM Plex Mono; Field
-Olive / Bone White / Dry Soil palette; light and dark themes). The interface text
-is in Brazilian Portuguese.
+> **About this project.** A tool built by **Aurox** for **study and research** on
+> plant/weed detection. It is not a commercial product. The images and
+> annotations belong to third parties — see each dataset's on-page **Credits**.
 
-> **About this project.** A tool built by **Aurox** for **study and research**
-> purposes on weed detection in soybean. It is not a commercial product. The
-> images and annotations belong to third parties (WEED2C-Dataset) — see
-> **[Credits](#credits)**.
+## Datasets
 
-## Features
+| id | Dataset | Task | Images | Annotations | Classes |
+|----|---------|------|-------:|------------:|---------|
+| `weed2c` | [WEED2C-Dataset](https://github.com/EvertonTetila/WEED2C-Dataset) — UAV soybean weeds | Object detection | 763 | 3,952 | buva · capim-amargoso |
+| `soycotton` | [SoyCotton-Leafs](https://doi.org/10.6084/m9.figshare.28466636.v3) — soybean vs cotton leaves | Instance segmentation | 640 | 12,411 | soybean · cotton |
 
-- **Filterable grid** with thumbnails of all 763 images (lazy-loaded).
-- **Filters**: weed class, match mode (any / all / exclusive), **estimated
-  vegetative stage** (V3/V4/V5), collection session (3 sessions), weed density
-  (sparse / medium / dense) and filename search.
-- **Per-image stage**: V3/V4/V5 badge on the card and in the detail view, with the
-  per-image canopy coverage.
-- **Box overlay** on the grid (toggle) and in the detail view.
-- **Lightbox** with the full-resolution image, class-labeled boxes, per-class
-  counts, metadata and keyboard navigation (← → Esc).
-- **Light/dark theme** (persisted in `localStorage`).
-- **Dataset credits and citation** rendered on the page itself.
+The grid for SoyCotton overlays the tight **bounding boxes** of each instance
+mask (the COCO masks themselves are not shipped to the browser).
+
+## Architecture
+
+Everything is driven by data so adding a dataset needs **no UI code**:
+
+- **`data/datasets.json`** — the registry (hand-authored). One small file the
+  landing page reads, and the source of each dataset's hero + credits in the
+  viewer: cover, stats, tags, citation, links.
+- **`data/<id>.json`** — the generated manifest, self-describing via a generic
+  `facets` array, so a dataset can declare 0..N filter dimensions
+  (e.g. WEED2C has *stage* + *collection*; SoyCotton has none).
+- **`index.html` + `home.js`** — landing / chooser.
+- **`viewer.html` + `app.js`** — the generic viewer, selected with
+  `viewer.html?dataset=<id>`.
+- **`theme.js`** — shared light/dark toggle.
+- **`prepare.py`** — multi-dataset pipeline (`weed2c` from Pascal VOC,
+  `soycotton` from COCO), writing per-dataset `images/<id>/`, `thumbs/<id>/`
+  and `data/<id>.json`.
+
+### Adding a dataset
+
+1. Add a `build_<id>()` to `prepare.py` returning a manifest dict and register it
+   in `BUILDERS`.
+2. Add the presentation entry to `data/datasets.json`.
+3. (Deploy) add its id to `DATASETS` and set its `<ID>_URL` (see DEPLOY.md).
 
 ## Running locally
 
-Requirements: Python 3.9+ and Pillow (`pip install Pillow numpy`).
+Requirements: Python 3.9+ with Pillow (`pip install Pillow numpy`).
 
 ```bash
-# 1. Generate images, thumbnails and the manifest from the .zip
-python3 prepare.py
+# 1. Generate images, thumbnails and manifests from the .zip archives
+python3 prepare.py all              # or: python3 prepare.py soycotton
+#    (WEED2C-Dataset.zip / SoyCotton.zip must be in the folder, or set
+#     WEED2C_ZIP / SOYCOTTON_ZIP)
 
 # 2. Serve over HTTP (manifest fetch does not work from file://)
-python3 -m http.server 8131
+python3 -m http.server 8137
 
 # 3. Open
-open http://localhost:8131
+open http://localhost:8137
 ```
 
-`prepare.py --skip-thumbs` rebuilds only the manifest (fast), without re-extracting
-images. The source archive path can be overridden with the `WEED2C_ZIP` env var.
+`prepare.py <id> --skip-thumbs` rebuilds only the manifest (fast).
+
+## Manifest schema (`data/<id>.json`)
+
+Compact and self-describing. Top level: `classes` (`label`, `sci`, `color`,
+`count`), `classLabel`, `task`, `facets`, `density`, `metrics`, `totals`. Per
+image: `f` (file), `w`/`h`, `n` (per-class counts), `b` (boxes
+`[classIdx, xmin, ymin, xmax, ymax]` in pixels), plus any facet keys the dataset
+declares (`g`, `s`, …) and `cv` (canopy 0–1) when `metrics.canopy` is set.
+
+Each **facet** is `{id, key, label, values[], badge?, estimated?, note?}`; the
+viewer renders one chip group per facet and filters images by `img[key]`.
+
+## Estimated vegetative stage (WEED2C only)
+
+The WEED2C-Dataset does **not** label phenological stage per image. `prepare.py`
+estimates it from each image's **canopy coverage** (Excess-Green index) and the
+collection date, then orders the three sessions V3 < V4 < V5. This is an
+**inference**, flagged *estimated* in the UI. To change it, edit
+`WEED2C_SESSION_STAGE` in `prepare.py` and run `python3 prepare.py weed2c --skip-thumbs`.
 
 ## Deploy
 
-To publish on Render (Static Site or Docker), see **[DEPLOY.md](./DEPLOY.md)**.
-The build downloads the dataset and generates the images — nothing heavy is
-committed to git.
-
-## Estimated vegetative stage
-
-The WEED2C-Dataset **does not label the phenological stage per image** — the paper
-only states that three areas were imaged across stages V3, V4 and V5. Since a stage
-filter was desired, it is **estimated** as follows:
-
-1. `prepare.py` computes each image's **canopy coverage** via the Excess-Green
-   index (`ExG = 2g − r − b`, fraction of vegetation pixels).
-2. The three sessions separate cleanly by measured coverage
-   (Field 2 ≈ 0.43 < Field 1 ≈ 0.48 ≪ Dec 18 ≈ 0.84).
-3. Ordering the sessions by development (and by date) assigns
-   **V3 → Field 2**, **V4 → Field 1**, **V5 → Dec 18** (10 days later).
-
-This assignment is an **inference**, flagged as *estimated* in the UI. If the
-authors confirm the real area→stage mapping, edit `SESSION_STAGE` in `prepare.py`
-and run `python3 prepare.py --skip-thumbs`.
-
-## Manifest (`data/index.json`)
-
-Compact and self-describing. Per image: `f` (file), `g` (session index),
-`s` (estimated stage index), `w`/`h` (dimensions), `n` (per-class counts),
-`b` (boxes `[class, xmin, ymin, xmax, ymax]` in pixels), `cv` (canopy coverage
-0–1). The top level holds `classes`, `groups`, `stages` and `stageNote`.
+See **[DEPLOY.md](./DEPLOY.md)**. The build downloads each dataset and generates
+the images — nothing heavy is committed to git.
 
 ## Project layout
 
 ```
-prepare.py         Pipeline: extracts JPGs, builds thumbnails and data/index.json
-index.html         Single-page viewer
-styles.css         Aurox visual system (themes, typography, layout)
-app.js             Filter state, grid, lightbox
-data/index.json    Compact manifest (generated) — classes, sessions, stages, boxes
-assets/fonts/      Brand fonts (self-hosted woff2)
-assets/logo/       Aurox mark (SVG)
-build.sh           Deploy build (fetch dataset → prepare → assemble public/)
-Dockerfile         Self-contained image (prepare + nginx)
-images/  thumbs/    Generated by prepare.py (not committed)
-WEED2C-Dataset.zip Source archive (not committed)
+index.html / home.js     Landing page (dataset chooser)
+viewer.html / app.js     Generic, config-driven viewer
+theme.js                 Shared light/dark theme toggle
+styles.css               Aurox visual system (themes, typography, layout)
+prepare.py               Multi-dataset pipeline (VOC + COCO → manifests)
+data/datasets.json       Registry (presentation: covers, stats, credits)
+data/<id>.json           Generated manifests (classes, facets, boxes)
+assets/fonts/  logo/     Brand fonts (woff2) and Aurox mark (SVG)
+build.sh / Dockerfile    Deploy build (fetch datasets → prepare → public/)
+images/<id>/ thumbs/<id>/ Generated by prepare.py (not committed)
 ```
 
 ## Credits
 
-**Dataset — WEED2C-Dataset.** The images and annotations are authored by third
-parties; all rights belong to the original authors. When reusing, please cite:
+Each dataset's images and annotations are authored by third parties; all rights
+belong to the original authors. Citations are rendered on each dataset's page.
 
-> TETILA, E. C.; MORO, B. L.; ASTOLFI, G.; DA COSTA, A. B.; AMORIM, W. P.;
-> BELETE, N. A. de S.; PISTORI, H.; BARBEDO, J. G. A. *Real-time detection of weeds
-> by species in soybean using UAV images.* Crop Protection, v. 184, p. 106846, 2024.
-> <https://doi.org/10.1016/j.cropro.2024.106846>
-
-- Dataset repository: <https://github.com/EvertonTetila/WEED2C-Dataset>
-- The `WEED2C-Dataset.zip` hosted in this repository's *Releases* is only a
-  **mirror** for the deploy build; the canonical source is the repository above.
+- **WEED2C-Dataset** — Tetila, E. C. et al. *Real-time detection of weeds by
+  species in soybean using UAV images.* Crop Protection, v. 184, p. 106846, 2024.
+  <https://doi.org/10.1016/j.cropro.2024.106846>
+- **SoyCotton-Leafs** — Segreto, T. H. et al. *A Leaf-Level Dataset for
+  Soybean-Cotton Detection and Segmentation.* Scientific Data, 2026 (CC BY 4.0).
+  <https://doi.org/10.1038/s41597-026-07092-8>
 
 **Typography.** [DM Serif Display](https://fonts.google.com/specimen/DM+Serif+Display)
-and [IBM Plex Mono](https://github.com/IBM/plex) — both under the SIL Open Font
-License 1.1.
+and [IBM Plex Mono](https://github.com/IBM/plex) — SIL Open Font License 1.1.
 
 **Visual identity and development.** Aurox — visual system and viewer
 implementation. Logo and brand © Aurox. Study project, non-commercial.
